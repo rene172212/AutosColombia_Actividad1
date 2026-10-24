@@ -71,17 +71,97 @@
     <article class="feature">
       <span class="feature-number" aria-hidden="true">01</span>
       <h3>Entradas</h3>
-      <p>El punto de partida para el control de cada vehículo.</p>
+      <p class="daily-summary">
+        @if (movementState() === 'loaded') {
+          {{ todayMovements().entradas.length }}
+          {{ todayMovements().entradas.length === 1 ? 'entrada' : 'entradas' }} hoy
+        } @else if (movementState() === 'loading') {
+          Consultando entradas de hoy…
+        } @else {
+          No se pudieron consultar las entradas.
+        }
+      </p>
+      @if (movementState() === 'loaded' && todayMovements().entradas.length === 0) {
+        <p class="daily-empty">No hay entradas registradas hoy.</p>
+      }
+      @if (movementState() === 'loaded' && todayMovements().entradas.length > 0) {
+        <ul class="daily-list" aria-label="Entradas registradas hoy">
+          @for (item of todayMovements().entradas; track item.id) {
+            <li><strong>{{ item.placa }}</strong><span>Celda {{ item.celda }} · {{ hora(item.fecha) }}</span></li>
+          }
+        </ul>
+      }
+      @if (movementState() === 'unavailable') {
+        <button class="occupancy-retry" type="button" (click)="loadTodayMovements()">Volver a consultar</button>
+      }
     </article>
     <article class="feature">
       <span class="feature-number" aria-hidden="true">02</span>
       <h3>Salidas</h3>
-      <p>El cierre de cada recorrido, con orden y claridad.</p>
+      <p class="daily-summary">
+        @if (movementState() === 'loaded') {
+          {{ todayMovements().salidas.length }}
+          {{ todayMovements().salidas.length === 1 ? 'salida' : 'salidas' }} hoy
+        } @else if (movementState() === 'loading') {
+          Consultando salidas de hoy…
+        } @else {
+          No se pudieron consultar las salidas.
+        }
+      </p>
+      @if (movementState() === 'loaded' && todayMovements().salidas.length === 0) {
+        <p class="daily-empty">No hay salidas registradas hoy.</p>
+      }
+      @if (movementState() === 'loaded' && todayMovements().salidas.length > 0) {
+        <ul class="daily-list" aria-label="Salidas registradas hoy">
+          @for (item of todayMovements().salidas; track item.id) {
+            <li><strong>{{ item.placa }}</strong><span>Celda {{ item.celda }} · {{ hora(item.fecha) }}</span></li>
+          }
+        </ul>
+      }
+      @if (movementState() === 'unavailable') {
+        <button class="occupancy-retry" type="button" (click)="loadTodayMovements()">Volver a consultar</button>
+      }
     </article>
-    <article class="feature">
+    <article class="feature feature-information">
       <span class="feature-number" aria-hidden="true">03</span>
       <h3>Información</h3>
-      <p>Una visión clara para acompañar la operación diaria.</p>
+      <p class="information-summary">
+        @if (occupancyState() === 'loaded') {
+          {{ occupiedSpaces().length }}
+          {{ occupiedSpaces().length === 1 ? 'celda ocupada' : 'celdas ocupadas' }}
+        } @else if (occupancyState() === 'loading') {
+          Consultando ocupación actual…
+        } @else {
+          No se pudo consultar la ocupación.
+        }
+      </p>
+
+      @if (occupancyState() === 'loaded' && occupiedSpaces().length === 0) {
+        <p class="occupancy-empty">No hay celdas ocupadas en este momento.</p>
+      }
+
+      @if (occupancyState() === 'loaded' && occupiedSpaces().length > 0) {
+        <ul class="occupancy-list" aria-label="Celdas ocupadas y vehículos">
+          @for (item of occupiedSpaces(); track item.id) {
+            <li class="occupancy-item">
+              <div class="occupancy-place">
+                <strong>Celda {{ item.celda.codigo }}</strong>
+                <span>{{ item.celda.tipo }}</span>
+              </div>
+              <div class="occupancy-vehicle">
+                <strong>{{ item.vehiculo.placa }}</strong>
+                <span>{{ item.vehiculo.marca }} · {{ item.vehiculo.modelo }} · {{ item.vehiculo.tipo }}</span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (occupancyState() === 'unavailable') {
+        <button class="occupancy-retry" type="button" (click)="loadOccupiedSpaces()">
+          Volver a consultar
+        </button>
+      }
     </article>
   </div>
 </section>

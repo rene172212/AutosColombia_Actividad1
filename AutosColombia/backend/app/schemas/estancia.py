@@ -42,6 +42,28 @@ class EstanciaAbiertaRespuesta(EstanciaRespuesta):
     celda: CeldaRespuesta
 
 
+class EstanciaOcupadaRespuesta(EstanciaRespuesta):
+    vehiculo: VehiculoRespuesta
+    celda: CeldaRespuesta
+
+
+class MovimientoDiaItem(BaseModel):
+    id: int
+    placa: str
+    celda: str
+    fecha: datetime
+
+    @field_validator("fecha")
+    @classmethod
+    def fecha_utc(cls, value: datetime) -> datetime:
+        return value.astimezone(timezone.utc)
+
+
+class MovimientosDiaRespuesta(BaseModel):
+    entradas: list[MovimientoDiaItem]
+    salidas: list[MovimientoDiaItem]
+
+
 class EstadoVehiculoRespuesta(BaseModel):
     vehiculo: VehiculoRespuesta
     esta_dentro: bool

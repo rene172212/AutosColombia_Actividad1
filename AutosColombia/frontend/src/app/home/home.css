@@ -175,6 +175,9 @@ h2 {
   border: 1px solid #e0e5de;
   border-radius: 14px;
 }
+.feature-information {
+  grid-column: 1 / -1;
+}
 .feature-number {
   color: #697b6e;
   font-size: 12px;
@@ -190,6 +193,99 @@ h3 {
   color: #627168;
   font-size: 14px;
   line-height: 1.7;
+}
+.feature .information-summary {
+  margin-bottom: 14px;
+  color: #365c4e;
+  font-weight: 600;
+}
+.feature .daily-summary {
+  margin-bottom: 14px;
+  color: #365c4e;
+  font-weight: 600;
+}
+.daily-empty {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f5f7f3;
+}
+.daily-list {
+  display: grid;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.daily-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #e0e5de;
+  border-radius: 9px;
+  background: #fbfcfa;
+}
+.daily-list strong {
+  color: #214c43;
+  font-size: 14px;
+}
+.daily-list span {
+  color: #627168;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.occupancy-empty {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f5f7f3;
+}
+.occupancy-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.occupancy-item {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #e0e5de;
+  border-radius: 10px;
+  background: #fbfcfa;
+}
+.occupancy-place,
+.occupancy-vehicle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.occupancy-place strong,
+.occupancy-vehicle strong {
+  color: #214c43;
+  font-size: 14px;
+}
+.occupancy-place span,
+.occupancy-vehicle span {
+  color: #627168;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.occupancy-retry {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid #214c43;
+  border-radius: 8px;
+  background: #fff;
+  color: #214c43;
+  font: inherit;
+  cursor: pointer;
 }
 .site-footer {
   display: flex;
@@ -223,6 +319,16 @@ h3 {
   }
   .feature-grid {
     grid-template-columns: 1fr;
+  }
+  .feature-information {
+    grid-column: auto;
+  }
+  .occupancy-list {
+    grid-template-columns: 1fr;
+  }
+  .occupancy-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
   .overview {
     padding-bottom: 40px;

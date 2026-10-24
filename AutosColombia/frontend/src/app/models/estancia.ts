@@ -24,3 +24,20 @@ export interface EstadoVehiculo {
   esta_dentro: boolean;
   estancia: (Estancia & { celda: Celda }) | null;
 }
+
+export interface EstanciaOcupada extends Estancia {
+  vehiculo: Vehiculo;
+  celda: Celda;
+}
+
+export interface MovimientoDia {
+  id: number;
+  placa: string;
+  celda: string;
+  fecha: string;
+}
+
+export interface MovimientosDia {
+  entradas: MovimientoDia[];
+  salidas: MovimientoDia[];
+}

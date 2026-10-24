@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
 from functools import wraps
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -9,7 +10,8 @@ from app.models import Celda, Estancia, Operador, Vehiculo, required_text
 from app.schemas.celda import CeldaRespuesta
 from app.schemas.estancia import (
     EntradaCrear, SalidaCrear, EstanciaRespuesta, EstanciaAbiertaRespuesta,
-    EstadoVehiculoRespuesta,
+    EstadoVehiculoRespuesta, EstanciaOcupadaRespuesta,
+    MovimientosDiaRespuesta, MovimientoDiaItem,
 )
 from app.schemas.vehiculo import VehiculoRespuesta
 
@@ -141,3 +143,50 @@ class ServicioEstancia:
             )
         return EstadoVehiculoRespuesta(vehiculo=VehiculoRespuesta.model_validate(vehiculo),
                                        esta_dentro=estancia is not None, estancia=abierta)
+
+    @transaccion
+    def listar_abiertas(self) -> list[EstanciaOcupadaRespuesta]:
+        """Lista celdas ocupadas y los vehículos asociados en una sola consulta."""
+        rows = self.session.execute(
+            select(Estancia, Vehiculo, Celda)
+            .join(Vehiculo, Vehiculo.id == Estancia.vehiculo_id)
+            .join(Celda, Celda.id == Estancia.celda_id)
+            .where(Estancia.salida.is_(None))
+            .order_by(Estancia.entrada, Estancia.id)
+        ).all()
+        return [
+            EstanciaOcupadaRespuesta(
+                **EstanciaRespuesta.model_validate(estancia).model_dump(),
+                vehiculo=VehiculoRespuesta.model_validate(vehiculo),
+                celda=CeldaRespuesta.model_validate(celda),
+            )
+            for estancia, vehiculo, celda in rows
+        ]
+
+    @transaccion
+    def movimientos_hoy(self) -> MovimientosDiaRespuesta:
+        """Lista entradas y salidas del día calendario actual en Bogotá."""
+        zona_bogota = ZoneInfo("America/Bogota")
+        hoy = datetime.now(zona_bogota).date()
+        inicio = datetime.combine(hoy, time.min, tzinfo=zona_bogota).astimezone(timezone.utc)
+        fin = (datetime.combine(hoy, time.min, tzinfo=zona_bogota) + timedelta(days=1)).astimezone(timezone.utc)
+
+        entradas = self.session.execute(
+            select(Estancia.id, Vehiculo.placa, Celda.codigo, Estancia.entrada)
+            .join(Vehiculo, Vehiculo.id == Estancia.vehiculo_id)
+            .join(Celda, Celda.id == Estancia.celda_id)
+            .where(Estancia.entrada >= inicio, Estancia.entrada < fin)
+            .order_by(Estancia.entrada, Estancia.id)
+        ).all()
+        salidas = self.session.execute(
+            select(Estancia.id, Vehiculo.placa, Celda.codigo, Estancia.salida)
+            .join(Vehiculo, Vehiculo.id == Estancia.vehiculo_id)
+            .join(Celda, Celda.id == Estancia.celda_id)
+            .where(Estancia.salida.is_not(None), Estancia.salida >= inicio, Estancia.salida < fin)
+            .order_by(Estancia.salida, Estancia.id)
+        ).all()
+
+        def items(rows) -> list[MovimientoDiaItem]:
+            return [MovimientoDiaItem(id=row[0], placa=row[1], celda=row[2], fecha=row[3]) for row in rows]
+
+        return MovimientosDiaRespuesta(entradas=items(entradas), salidas=items(salidas))
