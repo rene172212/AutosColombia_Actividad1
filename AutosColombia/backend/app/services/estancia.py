@@ -63,6 +63,26 @@ class ServicioEstancia:
             raise EstanciaError(404, "Operador no encontrado.")
         return operador
 
+    def _validar_compatibilidad_celda(self, celda: Celda, vehiculo: Vehiculo) -> None:
+        tipo_celda = (celda.tipo or "").strip().upper()
+        codigo_celda = (celda.codigo or "").strip().upper()
+        tipo_vehiculo = (vehiculo.tipo or "").strip().upper()
+
+        es_celda_moto = tipo_celda == "MOTO" or codigo_celda.startswith("M")
+        es_celda_carro = tipo_celda in {"CARRO", "AUTOMOVIL", "CAMIONETA"} or codigo_celda.startswith("C")
+
+        if es_celda_moto and tipo_vehiculo != "MOTO":
+            raise EstanciaError(
+                409,
+                f"La celda {celda.codigo} ({celda.tipo}) es solo para motos. No se permite el ingreso de un vehículo tipo {tipo_vehiculo}."
+            )
+
+        if es_celda_carro and tipo_vehiculo not in {"AUTOMOVIL", "CAMIONETA"}:
+            raise EstanciaError(
+                409,
+                f"La celda {celda.codigo} ({celda.tipo}) es para carros. Solo se permite el ingreso de automóvil o camioneta (el vehículo es {tipo_vehiculo})."
+            )
+
     @transaccion
     def entrada(self, data: EntradaCrear) -> EstanciaRespuesta:
         vehiculo = self._vehiculo(data.placa)
@@ -78,6 +98,7 @@ class ServicioEstancia:
             Estancia.celda_id == celda.id, Estancia.salida.is_(None)
         )) is not None:
             raise EstanciaError(409, "La celda está ocupada.")
+        self._validar_compatibilidad_celda(celda, vehiculo)
         estancia = Estancia(vehiculo_id=vehiculo.id, celda_id=celda.id,
                             operador_entrada_id=operador.id, entrada=datetime.now(timezone.utc))
         self.session.add(estancia)
